@@ -17,7 +17,8 @@ before designing. Things to verify regardless of project type:
 - **Auth**: how is authentication enforced across services?
 - **Caching / startup patterns**: does the project load data at startup or per-request?
   This affects where reads and writes can safely happen.
-- **UI constraints**: what framework and styling approach is used?
+- **Interface constraints** (if the project has a UI, CLI, or API surface): what framework,
+  styling approach, or interface conventions apply?
 - **API compatibility**: prefer additive changes (new field alongside old, new endpoint
   alongside old) to avoid breaking existing clients.
 

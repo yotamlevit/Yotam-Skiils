@@ -184,7 +184,9 @@ Each agent writes its artifact, then messages you. You verify, then proceed.
   ```
 - Before the **reviewer** starts:
   ```bash
-  python3 -c "import json; d=json.load(open('qa_results.json')); assert 'status' in d" \
+  # Try jq first, fall back to python3 — at least one is available on any dev machine
+  (jq -e 'has("status")' qa_results.json >/dev/null 2>&1 || \
+   python3 -c "import json; d=json.load(open('qa_results.json')); assert 'status' in d") \
     || echo "GATE FAIL: qa_results.json missing/invalid"
   ```
 

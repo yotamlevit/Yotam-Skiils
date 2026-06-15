@@ -17,6 +17,7 @@ language stack and run the relevant tools on changed code:
 - Java: `mvn dependency-check:check` or `gradle dependencyCheckAnalyze`
 - C# / .NET: `dotnet list package --vulnerable`
 - PHP: `composer audit`
+- C / C++: `cppcheck --enable=warning,security` + `flawfinder` for security-specific patterns
 - Other languages: use whatever SAST/dependency-audit tool the project has configured
 
 **Secrets scan** — eyeball the diff for any hardcoded credentials, tokens, or API

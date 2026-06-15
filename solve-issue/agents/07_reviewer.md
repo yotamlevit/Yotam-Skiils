@@ -33,7 +33,11 @@ or the git flow docs — e.g. `dev`, `develop`, `main`). Use the appropriate CLI
 for the project's git hosting platform:
 - GitHub: `gh pr create --base <integration-branch>`
 - GitLab: `glab mr create --target-branch <integration-branch>`
-- Bitbucket / other: open via the web UI or the platform's CLI if available
+- Other platforms: attempt the platform's CLI if available
+
+If the CLI is unavailable or fails: push the branch to remote (`git push -u origin <branch>`)
+and message the Lead with the branch name. The human will open the PR/MR manually.
+Do NOT attempt to open the web UI — just push and report.
 
 Never target `main` directly unless the project's workflow explicitly calls for it.
 Write a clear PR/MR description that references the original issue/ticket URL from
