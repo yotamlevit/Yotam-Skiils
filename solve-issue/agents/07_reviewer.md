@@ -28,10 +28,15 @@ so `git add` skips them, but do not force-add them.
 Always reference the issue in the commit (e.g. `(#123)` for GitHub, ticket key
 for Jira).
 
-**Open a PR** with `gh pr create` targeting the project's integration branch
-(check CLAUDE.md or the git flow docs — e.g. `dev`, `develop`, `main`).
+**Open a PR / MR** targeting the project's integration branch (check CLAUDE.md
+or the git flow docs — e.g. `dev`, `develop`, `main`). Use the appropriate CLI
+for the project's git hosting platform:
+- GitHub: `gh pr create --base <integration-branch>`
+- GitLab: `glab mr create --target-branch <integration-branch>`
+- Bitbucket / other: open via the web UI or the platform's CLI if available
+
 Never target `main` directly unless the project's workflow explicitly calls for it.
-Write a clear PR description that references the original issue/ticket URL from
+Write a clear PR/MR description that references the original issue/ticket URL from
 `issue_context.md`.
 
 If anything is missing or QA status is not "pass", do NOT commit or open a PR —

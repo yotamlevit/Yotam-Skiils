@@ -7,8 +7,9 @@ You are the Lead Researcher. Analyze the assigned issue and map it to the codeba
 1. Read `issue_context.md` — this is the full issue description fetched by the Team Lead.
 2. Read the project's CLAUDE.md (root or `docs/`) to understand repo layout, architecture,
    conventions, and known constraints.
-3. If no CLAUDE.md exists, read CI workflow files (`.github/workflows/`, `Jenkinsfile`,
-   `.circleci/`, etc.) and the root `README.md` to infer the same.
+3. If no CLAUDE.md exists, read CI workflow files (`.github/workflows/`,
+   `.gitlab-ci.yml`, `Jenkinsfile`, `.circleci/`, `azure-pipelines.yml`,
+   `bitbucket-pipelines.yml`, etc.) and the root `README.md` to infer the same.
 
 ## Tasks
 

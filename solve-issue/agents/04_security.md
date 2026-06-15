@@ -13,6 +13,10 @@ language stack and run the relevant tools on changed code:
 - JavaScript / TypeScript: `npm audit --omit=dev` in the changed package
 - Go: `govulncheck ./...`
 - Ruby: `bundle audit`
+- Rust: `cargo audit`
+- Java: `mvn dependency-check:check` or `gradle dependencyCheckAnalyze`
+- C# / .NET: `dotnet list package --vulnerable`
+- PHP: `composer audit`
 - Other languages: use whatever SAST/dependency-audit tool the project has configured
 
 **Secrets scan** — eyeball the diff for any hardcoded credentials, tokens, or API

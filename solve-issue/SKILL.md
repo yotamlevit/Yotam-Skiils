@@ -72,8 +72,9 @@ keep in mind for all subsequent agent prompts:
 - **Test commands**: what CI runs per service?
 - **Commit convention**: Conventional Commits, custom format, etc.?
 
-If no CLAUDE.md exists, infer from CI workflow files (`.github/workflows/`, `Jenkinsfile`,
-`.circleci/`, etc.) and `README.md`.
+If no CLAUDE.md exists, infer from CI workflow files (`.github/workflows/`,
+`.gitlab-ci.yml`, `Jenkinsfile`, `.circleci/`, `azure-pipelines.yml`,
+`bitbucket-pipelines.yml`, etc.) and `README.md`.
 
 ---
 
@@ -133,15 +134,19 @@ user to re-run with `--worktree` or stash their changes first.
 **In-place mode:**
 ```bash
 git checkout <integration-branch> && git pull
-git checkout -b fix/issue-${ISSUE_NUM}-<slug>
+git checkout -b <branch-name>
 ```
 
 **Worktree mode:**
 ```bash
 git fetch origin <integration-branch>
 git worktree add ../${REPO_NAME}-issue-${ISSUE_NUM} \
-  -b fix/issue-${ISSUE_NUM}-<slug> origin/<integration-branch>
+  -b <branch-name> origin/<integration-branch>
 ```
+
+For `<branch-name>`: follow the project's branch naming convention from CLAUDE.md
+or match the pattern in recent `git branch -a` output. Default to
+`fix/issue-${ISSUE_NUM}-<slug>` if no convention is specified.
 
 Dependencies (e.g. `npm ci`, Python venv + pip install) must be set up in the new
 worktree per the project's conventions.
