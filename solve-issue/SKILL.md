@@ -43,11 +43,9 @@ values and write them to `.solve-issue.env` at the checkout root:
 ISSUE_NUM=<the issue number>
 cat > .solve-issue.env <<ENV
 ISSUE_NUM=${ISSUE_NUM}
-# Network — ParkWise's only test resource that escapes the worktree (see
-# "ParkWise isolation notes" below for what was dropped and why).
-# Next.js dev servers (parkwise-web :3000, admin-web :3001) honor PORT.
+# Port offsets by issue number to avoid collisions when running parallel issues.
+# Adjust base ports to match your project's well-known dev-server ports.
 PORT=$((10000 + ISSUE_NUM))
-# FastAPI (parking-quote :8000, admin-backend :8001): uvicorn --port \$API_PORT
 API_PORT=$((20000 + ISSUE_NUM))
 ENV
 ```
@@ -66,24 +64,17 @@ isolated values regardless of how many separate shells the agents use.
 > exceeds the 65535 port ceiling). For very large issue numbers use
 > `10000 + (ISSUE_NUM % 20000)` instead.
 
-## ParkWise isolation notes (what was kept vs dropped)
+## Project isolation notes
 
-**Kept: ports only.** The test suites themselves bind nothing (pytest uses
-`fastapi.testclient.TestClient`, Vitest runs in jsdom) — `PORT`/`API_PORT` matter
-only if an agent manually starts a dev server to reproduce or verify behavior.
+**Ports only.** Most test suites bind no ports (e.g. pytest uses TestClient, Vitest
+runs in jsdom) — `PORT`/`API_PORT` matter only if an agent manually starts a dev
+server to reproduce or verify behavior. Caches (e.g. `.pytest_cache`,
+`node_modules/.vite`) live in-tree and are already isolated by the worktree.
 
-**Dropped (in-tree, already isolated by the worktree):**
-- Vitest cache → `node_modules/.vite` inside each service (each worktree installs
-  its own `node_modules`). Jest is not used in this repo.
-- pytest cache → `.pytest_cache` in the service directory.
-- No SQLite, no Redis — Firestore is the single database, and both backends'
-  test suites fully mock it (no emulator needed).
-
-**Hard rule for parallel worktrees:** never run `make up`, any Docker Compose
-target, or the Firebase emulators (`make emulator-start`) from a secondary
-worktree. The Compose file hardcodes host ports (3000, 3001, 8000, 8001, 4000,
-8081, 9099, 5001, 9199) and there is one Docker daemon — parallel issues WILL
-collide. The QA suite does not need any of these.
+**Hard rule for parallel worktrees:** never run commands that bind hardcoded host
+ports (e.g. `docker compose up`, local database servers, emulators) from a secondary
+worktree if those ports are shared with the main checkout. The QA suite should not
+need them if the project mocks external dependencies in tests.
 
 ## Checkout mode (explicit flag — not a judgment call)
 
@@ -95,31 +86,31 @@ The mode is set by the skill invocation, never by your own discretion:
 **Safety check for in-place mode (block, don't auto-switch):** before touching
 anything, verify the main checkout is clean (`git status --porcelain` empty) and
 no other run is active (no `.solve-issue.env` in the main checkout, no
-`ParkWise-issue-*` entry in `git worktree list`). If either fails, STOP and ask
+`<repo>-issue-*` entry in `git worktree list`). If either fails, STOP and ask
 the user: re-run with `--worktree`, or stash/commit their changes first. Do NOT
 silently pick a mode for them.
 
-**In-place mode** (the common case — reuses existing `node_modules`/venvs):
+**In-place mode** (the common case — reuses existing dependencies):
 
 ```bash
-git checkout dev && git pull && git checkout -b fix/issue-${ISSUE_NUM}-<slug>
+git checkout <integration-branch> && git pull && git checkout -b fix/issue-${ISSUE_NUM}-<slug>
 # then write .solve-issue.env at the repo root as above
 ```
 
-**Worktree mode** (ParkWise git flow: branch from `dev`, never `main`). Fetch
-first and branch from `origin/dev` — local `dev` may be stale, and fetching
-does not disturb the main checkout the way `git pull` on a shared branch would:
+Replace `<integration-branch>` with the project's integration branch (e.g. `dev`,
+`develop`, `main`) — check the project's CLAUDE.md or git workflow docs.
+
+**Worktree mode.** Fetch first and branch from the remote integration branch — local
+may be stale, and fetching does not disturb the main checkout:
 
 ```bash
-git fetch origin dev
-git worktree add ../ParkWise-issue-${ISSUE_NUM} -b fix/issue-${ISSUE_NUM}-<slug> origin/dev
+git fetch origin <integration-branch>
+git worktree add ../<repo>-issue-${ISSUE_NUM} -b fix/issue-${ISSUE_NUM}-<slug> origin/<integration-branch>
 ```
 
-Each worktree needs its own dependencies: `npm ci` in any changed web service
-(`services/parkwise-web`, `services/admin-web`), and for Python services a venv
-(`python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
-plus `pip install pytest pytest-asyncio httpx trio`) — repo rule: never run
-Python outside a venv.
+Each worktree needs its own dependencies per the project's setup conventions (e.g.
+`npm ci` for Node services, `python3 -m venv .venv && pip install -r requirements.txt`
+for Python — check the project's CLAUDE.md).
 
 **Both modes — keep pipeline artifacts out of git.** At setup, exclude them once
 (`.git/info/exclude` is shared by all worktrees and never committed):
@@ -136,7 +127,7 @@ done
 delete the four pipeline artifacts. In in-place mode also leave the repo on the
 feature branch (the user decides when to switch back); in worktree mode the
 branch is already pushed by `gh pr create` — leave the worktree for the user to
-remove after merge (`git worktree remove ../ParkWise-issue-${ISSUE_NUM}`).
+remove after merge.
 
 ## Pipeline (run in this order)
 
@@ -149,7 +140,7 @@ Each agent writes its artifact, then messages you. You verify, then proceed.
 4. `04_security.md`  → security findings (communicated, not gated — see below)
 5. `05_qa.md`        → `qa_results.json`          ← **gated** (reviewer depends on it)
 6. `06_writer.md`    → docs / CHANGELOG
-7. `07_reviewer.md`  → commit + PR (base `dev` — never `main`)
+7. `07_reviewer.md`  → commit + PR
 
 ## Artifact gates (only two — keep them honest)
 
